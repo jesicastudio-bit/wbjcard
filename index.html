@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Business Card Generator (Print Ready)</title>
-    <!-- Font Dasar -->
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Font Pengganti Trajan Pro untuk Preview (Cinzel) -->
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
     
     <!-- Library untuk PDF Vektor -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -23,7 +19,7 @@
         }
 
         body {
-            font-family: 'Montserrat', sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             margin: 0; padding: 20px;
             background-color: #f0f2f5;
             display: flex; flex-direction: column; gap: 20px;
@@ -97,12 +93,12 @@
         /* TEKS SISI DEPAN (FRONT) */
         .c-name { 
             position: absolute; top: 230px; width: 100%; text-align: center; 
-            font-family: 'Cinzel', serif; font-size: 44px; font-weight: 700; color: var(--dark-green); margin: 0; 
+            font-family: 'Times New Roman', Times, serif; font-size: 44px; font-weight: 700; color: var(--dark-green); margin: 0; 
             letter-spacing: 1px; transition: top 0.3s;
         }
         .c-title { 
             position: absolute; top: 285px; width: 100%; text-align: center; 
-            font-family: 'Cinzel', serif; font-size: 22px; font-weight: 400; color: var(--dark-green); margin: 0; 
+            font-family: 'Times New Roman', Times, serif; font-size: 22px; font-weight: 400; color: var(--dark-green); margin: 0; 
             letter-spacing: 2px; transition: top 0.3s;
         }
         .card-preview.format-1 .c-name { top: 260px; }
@@ -112,8 +108,8 @@
             position: absolute; bottom: 40px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 18px;
         }
         .c-loc-block { display: flex; flex-direction: column; align-items: center; gap: 4px;}
-        .c-loc-address { font-family: 'Montserrat', sans-serif; font-size: 21px; font-weight: 600; color: #ffffff; margin: 0; }
-        .c-loc-contact { font-family: 'Montserrat', sans-serif; font-size: 19px; font-weight: 500; color: #ffffff; margin: 0; }
+        .c-loc-address { font-family: Arial, Helvetica, sans-serif; font-size: 21px; font-weight: 600; color: #ffffff; margin: 0; }
+        .c-loc-contact { font-family: Arial, Helvetica, sans-serif; font-size: 19px; font-weight: 500; color: #ffffff; margin: 0; }
 
         /* SISI BELAKANG (BACK) */
         .back-accent-bar-top { position: absolute; top: 0; left: 0; right: 0; height: 35px; background: var(--primary-green); z-index: 10; }
@@ -325,7 +321,7 @@
 
             const loc1 = locationsData.find(l => l.id === document.getElementById('bc-loc1').value);
             document.querySelectorAll('.prev-address-1').forEach(el => el.textContent = loc1.address);
-            document.querySelectorAll('.prev-contact-1').forEach(el => el.textContent = `Phone: (414) ${loc1.phone.slice(4)} | Fax: (414) ${loc1.fax.slice(4)}`);
+            document.querySelectorAll('.prev-contact-1').forEach(el => el.textContent = `Phone: ${loc1.phone} | Fax: ${loc1.fax}`);
 
             const format = document.getElementById('bc-format').value;
             let backHtml = renderBackLocItem(loc1);
@@ -333,7 +329,7 @@
             if (format === '2') {
                 const loc2 = locationsData.find(l => l.id === document.getElementById('bc-loc2').value);
                 document.querySelectorAll('.prev-address-2').forEach(el => el.textContent = loc2.address);
-                document.querySelectorAll('.prev-contact-2').forEach(el => el.textContent = `Phone: (414) ${loc2.phone.slice(4)} | Fax: (414) ${loc2.fax.slice(4)}`);
+                document.querySelectorAll('.prev-contact-2').forEach(el => el.textContent = `Phone: ${loc2.phone} | Fax: ${loc2.fax}`);
                 backHtml += renderBackLocItem(loc2);
             }
             
@@ -415,12 +411,12 @@
             if (format === '2') {
                 const loc2 = locationsData.find(l => l.id === document.getElementById('bc-loc2').value);
                 doc.text(loc1.address, centerX, 38.5 + yOffset, { align: 'center' });
-                doc.setFont("helvetica", "normal").text(`Phone: (414) ${loc1.phone.slice(4)} | Fax: (414) ${loc1.fax.slice(4)}`, centerX, 41.5 + yOffset, { align: 'center' });
+                doc.setFont("helvetica", "normal").text(`Phone: ${loc1.phone} | Fax: ${loc1.fax}`, centerX, 41.5 + yOffset, { align: 'center' });
                 doc.setFont("helvetica", "bold").text(loc2.address, centerX, 45.5 + yOffset, { align: 'center' });
-                doc.setFont("helvetica", "normal").text(`Phone: (414) ${loc2.phone.slice(4)} | Fax: (414) ${loc2.fax.slice(4)}`, centerX, 48.5 + yOffset, { align: 'center' });
+                doc.setFont("helvetica", "normal").text(`Phone: ${loc2.phone} | Fax: ${loc2.fax}`, centerX, 48.5 + yOffset, { align: 'center' });
             } else {
                 doc.text(loc1.address, centerX, 43 + yOffset, { align: 'center' });
-                doc.setFont("helvetica", "normal").text(`Phone: (414) ${loc1.phone.slice(4)} | Fax: (414) ${loc1.fax.slice(4)}`, centerX, 46 + yOffset, { align: 'center' });
+                doc.setFont("helvetica", "normal").text(`Phone: ${loc1.phone} | Fax: ${loc1.fax}`, centerX, 46 + yOffset, { align: 'center' });
             }
 
             // --- HALAMAN 2: BELAKANG (VEKTOR MURNI) ---
@@ -453,8 +449,9 @@
             renderBackPDFLoc(loc1);
             if (format === '2') renderBackPDFLoc(locationsData.find(l => l.id === document.getElementById('bc-loc2').value));
 
-            // Appointment Details
-            currentY += 2;
+            // Appointment Details - FIX: Menggunakan Fixed Y Position
+            currentY = 32 + yOffset;
+            
             doc.setFont("helvetica", "bold").setFontSize(10).text("Appointment Details:", leftX, currentY);
             doc.setDrawColor(248, 192, 24).setLineWidth(1.2).line(leftX, currentY + 1.5, leftX + 35, currentY + 1.5);
             
