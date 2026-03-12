@@ -95,21 +95,22 @@
         .trim-view .safe-area { top: 0; left: 0; }
 
         /* TEKS SISI DEPAN (FRONT) */
+        /* Koordinat Top diubah agar tidak menabrak pita hijau */
         .c-name { 
-            position: absolute; top: 230px; width: 100%; text-align: center; 
+            position: absolute; top: 245px; width: 100%; text-align: center; 
             font-family: 'Cinzel', serif; font-size: 44px; font-weight: 700; color: var(--dark-green); margin: 0; 
             letter-spacing: 1px; transition: top 0.3s;
         }
         .c-title { 
-            position: absolute; top: 285px; width: 100%; text-align: center; 
+            position: absolute; top: 300px; width: 100%; text-align: center; 
             font-family: 'Cinzel', serif; font-size: 22px; font-weight: 400; color: var(--dark-green); margin: 0; 
             letter-spacing: 2px; transition: top 0.3s;
         }
-        .card-preview.format-1 .c-name { top: 260px; }
-        .card-preview.format-1 .c-title { top: 315px; }
+        .card-preview.format-1 .c-name { top: 270px; }
+        .card-preview.format-1 .c-title { top: 325px; }
         
         .c-addresses-container {
-            position: absolute; bottom: 40px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 18px;
+            position: absolute; bottom: 35px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 18px;
         }
         .c-loc-block { display: flex; flex-direction: column; align-items: center; gap: 4px;}
         .c-loc-address { font-family: 'Montserrat', sans-serif; font-size: 21px; font-weight: 600; color: #ffffff; margin: 0; }
@@ -117,20 +118,27 @@
 
         /* SISI BELAKANG (BACK) */
         .back-accent-bar-top { position: absolute; top: 0; left: 0; right: 0; height: 35px; background: var(--primary-green); z-index: 10; }
-        .back-accent-bar-bottom { position: absolute; bottom: 0; left: 0; right: 0; height: 50px; background: var(--primary-green); z-index: 10; }
+        .back-accent-bar-bottom { position: absolute; bottom: 0; left: 0; right: 0; height: 35px; background: var(--primary-green); z-index: 10; }
         
         .back-container { padding: 55px 60px 65px 60px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
-        .back-loc-list { display: flex; flex-direction: column; gap: 25px; margin-bottom: 30px; }
-        .back-loc-item { display: flex; align-items: flex-start; gap: 20px; }
-        .back-checkbox { width: 32px; height: 32px; border: 3px solid var(--dark-green); flex-shrink: 0; margin-top: 4px; border-radius: 4px; }
-        .back-loc-text h4 { margin: 0; font-size: 22px; font-weight: 700; color: var(--primary-green); }
+        .back-loc-list { display: flex; flex-direction: column; gap: 25px; margin-bottom: 20px; min-height: 125px; }
+        
+        /* FIX HTML Preview Layout Overlapping */
+        .back-loc-item { display: flex; align-items: flex-start; }
+        .back-checkbox { 
+            width: 32px; height: 32px; min-width: 32px; 
+            border: 3px solid var(--dark-green); flex-shrink: 0; 
+            margin-right: 20px; /* Diganti dari gap flexbox ke margin tegas */
+            margin-top: 4px; border-radius: 4px; 
+        }
+        .back-loc-text { display: flex; flex-direction: column; }
+        .back-loc-text h4 { margin: 0; font-size: 22px; font-weight: 700; color: var(--primary-green); line-height: 1.2; }
         .back-loc-text p { margin: 4px 0 0 0; font-size: 16px; font-weight: 500; color: #333; line-height: 1.4; }
         
         .back-details-title { font-size: 24px; font-weight: 800; color: var(--primary-green); border-bottom: 5px solid var(--yellow); align-self: flex-start; padding-bottom: 5px; margin-bottom: 30px; margin-top: 10px; }
-        .back-field { display: flex; align-items: baseline; gap: 15px; margin-bottom: 25px; font-size: 22px; font-weight: 600; color: #333; }
+        .back-field { display: flex; align-items: baseline; gap: 15px; margin-bottom: 35px; font-size: 22px; font-weight: 600; color: #333; }
         .back-line { flex-grow: 1; border-bottom: 2.5px solid #333; }
         
-        /* Flexbox for Date/Time row */
         .back-row { display: flex; gap: 40px; }
         .back-row .back-field { flex: 1; margin-bottom: 0; }
 
@@ -364,7 +372,7 @@
         window.onload = () => { initApp(); scalePreview(); };
 
 
-        // --- 3. ENGINE PEMBUAT PDF (2 HALAMAN) ---
+        // --- 3. ENGINE PEMBUAT PDF ---
         async function generateVectorPDF(type) {
             const { jsPDF } = window.jspdf;
             
@@ -405,73 +413,71 @@
 
             if (isBleed) drawCropMarks(doc, pdfWidth, pdfHeight);
 
+            // FIX: Kordinat Y dinaikkan agar tulisan berada persis di background putih/kuning terang
             const extraY = format === '1' ? 3 : 0;
             doc.setFont("times", "bold").setFontSize(14).setTextColor(0, 51, 51);
-            doc.text(name, centerX, 29 + yOffset + extraY, { align: 'center' }); 
+            doc.text(name, centerX, 24.5 + yOffset + extraY, { align: 'center' }); 
             doc.setFont("times", "normal").setFontSize(8.5);
-            doc.text(title, centerX, 34 + yOffset + extraY, { align: 'center' });
+            doc.text(title, centerX, 30.0 + yOffset + extraY, { align: 'center' });
 
             doc.setFont("helvetica", "bold").setFontSize(7).setTextColor(255, 255, 255);
             if (format === '2') {
-                const loc2 = locationsData.find(l => l.id === document.getElementById('bc-loc2').value);
-                doc.text(loc1.address, centerX, 38.5 + yOffset, { align: 'center' });
-                doc.setFont("helvetica", "normal").text(`Phone: (414) ${loc1.phone.slice(4)} | Fax: (414) ${loc1.fax.slice(4)}`, centerX, 41.5 + yOffset, { align: 'center' });
-                doc.setFont("helvetica", "bold").text(loc2.address, centerX, 45.5 + yOffset, { align: 'center' });
-                doc.setFont("helvetica", "normal").text(`Phone: (414) ${loc2.phone.slice(4)} | Fax: (414) ${loc2.fax.slice(4)}`, centerX, 48.5 + yOffset, { align: 'center' });
+                doc.text(loc1.address, centerX, 36.5 + yOffset, { align: 'center' });
+                doc.setFont("helvetica", "normal").text(`Phone: (414) ${loc1.phone.slice(4)} | Fax: (414) ${loc1.fax.slice(4)}`, centerX, 39.5 + yOffset, { align: 'center' });
+                doc.setFont("helvetica", "bold").text(loc2.address, centerX, 43.5 + yOffset, { align: 'center' });
+                doc.setFont("helvetica", "normal").text(`Phone: (414) ${loc2.phone.slice(4)} | Fax: (414) ${loc2.fax.slice(4)}`, centerX, 46.5 + yOffset, { align: 'center' });
             } else {
-                doc.text(loc1.address, centerX, 43 + yOffset, { align: 'center' });
-                doc.setFont("helvetica", "normal").text(`Phone: (414) ${loc1.phone.slice(4)} | Fax: (414) ${loc1.fax.slice(4)}`, centerX, 46 + yOffset, { align: 'center' });
+                doc.text(loc1.address, centerX, 41 + yOffset, { align: 'center' });
+                doc.setFont("helvetica", "normal").text(`Phone: (414) ${loc1.phone.slice(4)} | Fax: (414) ${loc1.fax.slice(4)}`, centerX, 44 + yOffset, { align: 'center' });
             }
 
-            // --- HALAMAN 2: BELAKANG (VEKTOR MURNI) ---
+            // --- HALAMAN 2: BELAKANG ---
             doc.addPage([pdfWidth, pdfHeight], 'landscape');
             if (isBleed) drawCropMarks(doc, pdfWidth, pdfHeight);
 
-            // Green Bars
-            doc.setFillColor(10, 68, 40); // var(--primary-green)
-            doc.rect(0, 0, pdfWidth, isBleed ? 13 : 3.5, 'F'); // Top bar
-            doc.rect(0, pdfHeight - (isBleed ? 18 : 5), pdfWidth, isBleed ? 18 : 5, 'F'); // Bottom bar
+            // FIX: Ukuran bar hijau dikoreksi agar proporsional dan tidak menutupi form Date/Time
+            doc.setFillColor(10, 68, 40);
+            doc.rect(0, 0, pdfWidth, isBleed ? 16.2 : 3.5, 'F'); 
+            doc.rect(0, pdfHeight - (isBleed ? 16.2 : 3.5), pdfWidth, isBleed ? 16.2 : 3.5, 'F'); 
 
-            doc.setTextColor(10, 68, 40); // Green for headings
-            let currentY = 10 + yOffset;
+            doc.setTextColor(10, 68, 40); 
+            let currentY = 7 + yOffset;
             let leftX = isBleed ? 16 : 6;
 
-            // Render Lokasi di Belakang
+            // FIX: Kordinat Y dibuat lebih rapat dan padat agar tidak bertabrakan
             const renderBackPDFLoc = (loc) => {
                 doc.setDrawColor(0, 51, 51).setLineWidth(0.4).rect(leftX, currentY, 3.5, 3.5);
-                doc.setFont("helvetica", "bold").setFontSize(8.5).text(loc.name, leftX + 5, currentY + 2.7);
-                currentY += 4.5;
+                doc.setFont("helvetica", "bold").setFontSize(8.5).text(loc.name, leftX + 5.5, currentY + 2.8);
+                
                 doc.setTextColor(51, 51, 51);
-                doc.setFont("helvetica", "normal").setFontSize(7).text(loc.address, leftX + 5, currentY);
-                currentY += 3.5;
-                doc.text(`Phone#: ${loc.phone}   Fax#: ${loc.fax}`, leftX + 5, currentY);
+                doc.setFont("helvetica", "normal").setFontSize(7).text(loc.address, leftX + 5.5, currentY + 6.0);
+                doc.text(`Phone#: ${loc.phone}   Fax#: ${loc.fax}`, leftX + 5.5, currentY + 9.0);
+                
                 doc.setTextColor(10, 68, 40);
-                currentY += 8;
+                currentY += 12.5;
             };
 
             renderBackPDFLoc(loc1);
             if (format === '2') renderBackPDFLoc(locationsData.find(l => l.id === document.getElementById('bc-loc2').value));
 
-            // Appointment Details
-            currentY += 2;
+            // Set fixed Y position untuk Appointment Details agar konsisten seperti layout 2 lokasi
+            currentY = 31 + yOffset;
+            
             doc.setFont("helvetica", "bold").setFontSize(10).text("Appointment Details:", leftX, currentY);
             doc.setDrawColor(248, 192, 24).setLineWidth(1.2).line(leftX, currentY + 1.5, leftX + 35, currentY + 1.5);
             
-            currentY += 10;
+            // Berikan spasi (jarak) ekstra untuk tulisan tangan
+            currentY += 7.5;
             doc.setTextColor(51, 51, 51);
-            
-            // Provider Field
             doc.setFontSize(8.5).text("Provider:", leftX, currentY);
             doc.setDrawColor(51, 51, 51).setLineWidth(0.3).line(leftX + 15, currentY + 0.5, pdfWidth - (isBleed ? 16 : 6), currentY + 0.5);
             
-            currentY += 10;
-            // Date Field
+            currentY += 7.5;
             doc.text("Date:", leftX, currentY);
-            doc.line(leftX + 10, currentY + 0.5, leftX + 50, currentY + 0.5);
+            doc.line(leftX + 10, currentY + 0.5, leftX + 45, currentY + 0.5);
             
-            // Time Field (Same line)
-            doc.text("Time:", leftX + 55, currentY);
-            doc.line(leftX + 65, currentY + 0.5, pdfWidth - (isBleed ? 16 : 6), currentY + 0.5);
+            doc.text("Time:", leftX + 50, currentY);
+            doc.line(leftX + 60, currentY + 0.5, pdfWidth - (isBleed ? 16 : 6), currentY + 0.5);
 
             doc.save(`BusinessCard_${isBleed?'Master':'Trim'}_${name.replace(/\s+/g,'_')}.pdf`);
         }
