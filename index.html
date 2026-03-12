@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Card Generator (Print Ready)</title>
+    <!-- Font Dasar -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Pengganti Trajan Pro untuk Preview (Cinzel) -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Library untuk PDF Vektor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-green: #0a4428;
+            --dark-green: #003333;
+            --light-bg: #ebf0ec;
+            --yellow: #f8c018;
+            --text-dark: #333;
+            --text-gray: #555;
+            --accent-light: #a3b95a;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0; padding: 20px;
+            background-color: #f0f2f5;
+            display: flex; flex-direction: column; gap: 20px;
+            height: 100vh; box-sizing: border-box;
+        }
+
+        @media (min-width: 768px) { body { flex-direction: row; } }
+
+        /* Panel Kontrol Kiri */
+        .controls {
+            flex: 1; background: white; padding: 25px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow-y: auto; max-width: 100%;
+        }
+        @media (min-width: 768px) { .controls { max-width: 400px; } }
+
+        .controls h2 { margin-top: 0; color: var(--dark-green); font-size: 22px;}
+        .controls p.subtitle { font-size: 13px; color: #777; margin-bottom: 20px; line-height: 1.4; }
+        
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 13px; color: #444;}
+        input, select { 
+            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; 
+            font-family: inherit; box-sizing: border-box; font-size: 14px; transition: 0.3s;
+        }
+        input:focus, select:focus { border-color: var(--primary-green); outline: none; }
+        
+        /* Tombol Ekspor */
+        .export-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        button.btn-export {
+            width: 100%; padding: 15px; color: white; border: none; border-radius: 6px;
+            font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.3s;
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        button.btn-bleed { background: #b71c1c; }
+        button.btn-bleed:hover { background: #880e4f; }
+        button.btn-trim { background: #1565c0; }
+        button.btn-trim:hover { background: #0d47a1; }
+
+        /* Area Preview Kanan */
+        .preview-wrapper {
+            flex: 2; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            background: #e0e0e0; border-radius: 12px; overflow-y: auto; position: relative; padding: 40px 20px;
+        }
+
+        #preview-scale-wrapper {
+            display: flex; flex-direction: column; align-items: center; gap: 40px;
+            transform-origin: top center;
+        }
+
+        .preview-label-box { text-align: center; margin-bottom: 15px; }
+        .preview-label-box span { font-weight: 700; color: var(--dark-green); background: white; padding: 8px 25px; border-radius: 30px; font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+        /* Styling Kanvas */
+        .card-preview {
+            background-color: white; position: relative;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15); overflow: hidden;
+            background-position: center; background-repeat: no-repeat;
+        }
+
+        .bleed-view { width: 952.5px; height: 571.5px; background-size: 952.5px 571.5px; }
+        .trim-view { width: 889px; height: 508px; background-size: 952.5px 571.5px; }
+
+        .safe-area { position: absolute; width: 889px; height: 508px; }
+        .bleed-view .safe-area {
+            top: 31.75px; left: 31.75px; 
+            border: 2px dashed rgba(229, 28, 35, 0.5); 
+            box-sizing: border-box;
+        }
+        .trim-view .safe-area { top: 0; left: 0; }
+
+        /* TEKS SISI DEPAN (FRONT) */
+        .c-name { 
+            position: absolute; top: 230px; width: 100%; text-align: center; 
+            font-family: 'Cinzel', serif; font-size: 44px; font-weight: 700; color: var(--dark-green); margin: 0; 
+            letter-spacing: 1px; transition: top 0.3s;
+        }
+        .c-title { 
+            position: absolute; top: 285px; width: 100%; text-align: center; 
+            font-family: 'Cinzel', serif; font-size: 22px; font-weight: 400; color: var(--dark-green); margin: 0; 
+            letter-spacing: 2px; transition: top 0.3s;
+        }
+        .card-preview.format-1 .c-name { top: 260px; }
+        .card-preview.format-1 .c-title { top: 315px; }
+        
+        .c-addresses-container {
+            position: absolute; bottom: 40px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 18px;
+        }
+        .c-loc-block { display: flex; flex-direction: column; align-items: center; gap: 4px;}
+        .c-loc-address { font-family: 'Montserrat', sans-serif; font-size: 21px; font-weight: 600; color: #ffffff; margin: 0; }
+        .c-loc-contact { font-family: 'Montserrat', sans-serif; font-size: 19px; font-weight: 500; color: #ffffff; margin: 0; }
+
+        /* SISI BELAKANG (BACK) */
+        .back-accent-bar-top { position: absolute; top: 0; left: 0; right: 0; height: 35px; background: var(--primary-green); z-index: 10; }
+        .back-accent-bar-bottom { position: absolute; bottom: 0; left: 0; right: 0; height: 50px; background: var(--primary-green); z-index: 10; }
+        
+        .back-container { padding: 55px 60px 65px 60px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
+        .back-loc-list { display: flex; flex-direction: column; gap: 25px; margin-bottom: 30px; }
+        .back-loc-item { display: flex; align-items: flex-start; gap: 20px; }
+        .back-checkbox { width: 32px; height: 32px; border: 3px solid var(--dark-green); flex-shrink: 0; margin-top: 4px; border-radius: 4px; }
+        .back-loc-text h4 { margin: 0; font-size: 22px; font-weight: 700; color: var(--primary-green); }
+        .back-loc-text p { margin: 4px 0 0 0; font-size: 16px; font-weight: 500; color: #333; line-height: 1.4; }
+        
+        .back-details-title { font-size: 24px; font-weight: 800; color: var(--primary-green); border-bottom: 5px solid var(--yellow); align-self: flex-start; padding-bottom: 5px; margin-bottom: 30px; margin-top: 10px; }
+        .back-field { display: flex; align-items: baseline; gap: 15px; margin-bottom: 25px; font-size: 22px; font-weight: 600; color: #333; }
+        .back-line { flex-grow: 1; border-bottom: 2.5px solid #333; }
+        
+        /* Flexbox for Date/Time row */
+        .back-row { display: flex; gap: 40px; }
+        .back-row .back-field { flex: 1; margin-bottom: 0; }
+
+        .hidden { display: none !important; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Panel Kontrol -->
+    <div class="controls">
+        <h2>Business Card Generator</h2>
+        <p class="subtitle">Sisi depan menggunakan gambar dari folder asset, sisi belakang (appointment) digambar otomatis menggunakan kode HTML/PDF.</p>
+
+        <div class="form-group">
+            <label>Format Layout Background</label>
+            <select id="bc-format" onchange="updateFormat()">
+                <option value="2">Format 2 Alamat</option>
+                <option value="1">Format 1 Alamat</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Pilih Dokter (Auto-fill)</label>
+            <select id="bc-doctor" onchange="autoFillDoctor()"></select>
+        </div>
+
+        <div class="form-group">
+            <label>Nama (Sesuai Cetakan)</label>
+            <input type="text" id="bc-name" value="DAVID B. KORNREICH, DO" oninput="updatePreview()">
+        </div>
+
+        <div class="form-group">
+            <label>Gelar / Spesialisasi</label>
+            <input type="text" id="bc-title" value="ORTHOPAEDIC SURGEON" oninput="updatePreview()">
+        </div>
+
+        <div class="form-group">
+            <label>Lokasi 1</label>
+            <select id="bc-loc1" onchange="updatePreview()"></select>
+        </div>
+
+        <div class="form-group" id="group-loc2">
+            <label>Lokasi 2</label>
+            <select id="bc-loc2" onchange="updatePreview()"></select>
+        </div>
+
+        <!-- Tombol Aksi Download -->
+        <div class="export-group">
+            <button class="btn-export btn-bleed" onclick="generateVectorPDF('bleed')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                PDF Master (2 Halaman - Cropmarks)
+            </button>
+            <button class="btn-export btn-trim" onclick="generateVectorPDF('trim')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" x1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                PDF Trim (2 Halaman - 3.5" x 2")
+            </button>
+        </div>
+        
+    </div>
+
+    <!-- Panel Preview -->
+    <div class="preview-wrapper" id="preview-wrapper">
+        <div id="preview-scale-wrapper">
+            
+            <!-- PRATINJAU SISI DEPAN -->
+            <div>
+                <div class="preview-label-box"><span>Sisi Depan (Front)</span></div>
+                <div class="card-preview trim-view" id="front-preview">
+                    <div class="safe-area">
+                        <h1 class="c-name prev-name"></h1>
+                        <h2 class="c-title prev-title"></h2>
+                        <div class="c-addresses-container">
+                            <div class="c-loc-block prev-block-1">
+                                <p class="c-loc-address prev-address-1"></p>
+                                <p class="c-loc-contact prev-contact-1"></p>
+                            </div>
+                            <div class="c-loc-block prev-block-2">
+                                <p class="c-loc-address prev-address-2"></p>
+                                <p class="c-loc-contact prev-contact-2"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRATINJAU SISI BELAKANG -->
+            <div>
+                <div class="preview-label-box"><span>Sisi Belakang (Appointment)</span></div>
+                <div class="card-preview trim-view">
+                    <div class="back-accent-bar-top"></div>
+                    <div class="safe-area back-container">
+                        <div class="back-loc-list" id="back-loc-list-preview">
+                            <!-- JS will inject location checkboxes here -->
+                        </div>
+                        <div class="back-details-title">Appointment Details:</div>
+                        <div class="back-field">Provider:<div class="back-line"></div></div>
+                        <div class="back-row">
+                            <div class="back-field">Date:<div class="back-line"></div></div>
+                            <div class="back-field">Time:<div class="back-line"></div></div>
+                        </div>
+                    </div>
+                    <div class="back-accent-bar-bottom"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- 1. DATABASE DOKTER ---
+        const doctorsData = [
+            { id: "amiot", name: "ROBBY A. AMIOT, D.P.M.", title: "FOOT & ANKLE" },
+            { id: "jake_bauwens", name: "JAKE BAUWENS, M.D.", title: "GENERAL ORTHOPEDICS & SPORTS MEDICINE" },
+            { id: "jesse_bauwens", name: "JESSE BAUWENS, M.D.", title: "ORTHOPAEDIC SURGEON" },
+            { id: "berg", name: "KENNETH C. BERG, M.D.", title: "GENERAL ORTHOPEDICS" },
+            { id: "curtis_crimmins", name: "CURTIS A. CRIMMINS, M.D.", title: "ELBOW, HAND & WRIST" },
+            { id: "michael_crimmins", name: "MICHAEL G. CRIMMINS, M.D.", title: "INTERVENTIONAL PAIN SPECIALIST" },
+            { id: "curtin", name: "BRIAN P. CURTIN, D.O.", title: "PAIN MANAGEMENT" },
+            { id: "donatello", name: "STEVEN DONATELLO, M.D.", title: "PAIN MANAGEMENT" },
+            { id: "ferguson", name: "ANTHONY FERGUSON, M.D.", title: "FOOT & ANKLE, SPORTS MEDICINE" },
+            { id: "huizenga", name: "THOMAS HUIZENGA, M.D.", title: "GENERAL ORTHOPEDICS" },
+            { id: "kornreich", name: "DAVID B. KORNREICH, D.O.", title: "ORTHOPAEDIC SURGEON" },
+            { id: "kroner_j", name: "JOHN T. KRONER, M.D.", title: "GENERAL ORTHOPEDICS" },
+            { id: "kroner_jm", name: "JOSEPH M. KRONER, M.D.", title: "GENERAL ORTHOPEDICS" },
+            { id: "maciolek", name: "LAWRENCE MACIOLEK, M.D.", title: "SPINE AND SCOLIOSIS" },
+            { id: "middleton", name: "DONALD MIDDLETON, M.D.", title: "ORTHOPAEDIC SURGEON" },
+            { id: "robbins", name: "STEPHEN ROBBINS, M.D.", title: "SPINE SPECIALIST" },
+            { id: "stephany", name: "JEFF STEPHANY, M.D.", title: "ORTHOPAEDIC SURGEON" },
+            { id: "swenson", name: "TODD M. SWENSON, M.D.", title: "SPORTS MEDICINE ORTHOPAEDIC" }
+        ];
+
+        const locationsData = [
+            { id: "wauwatosa", name: "Mayfair Location", address: "2500 N. Mayfair Road, Suite 500, Wauwatosa, WI 53226", phone: "414-257-2525", fax: "414-257-1772" },
+            { id: "glendale_130", name: "Glendale Location (Suite 130)", address: "525 W. River Woods Pkwy, Suite 130, Glendale, WI 53212", phone: "414-961-0304", fax: "414-961-2061" },
+            { id: "glendale_100", name: "Glendale Location (Suite 100)", address: "525 W. River Woods Pkwy, Suite 100, Glendale, WI 53212", phone: "414-332-6262", fax: "414-332-0422" },
+            { id: "cedarburg", name: "Cedarburg Location", address: "W62N208 Washington Ave., Cedarburg, WI 53012", phone: "262-376-7480", fax: "262-375-4700" }
+        ];
+
+        // --- 2. INISIALISASI UI ---
+        function initApp() {
+            const docSelect = document.getElementById('bc-doctor');
+            doctorsData.forEach(d => { docSelect.add(new Option(d.name, d.id)); });
+
+            const loc1Select = document.getElementById('bc-loc1');
+            const loc2Select = document.getElementById('bc-loc2');
+            locationsData.forEach(l => { 
+                loc1Select.add(new Option(l.name, l.id)); 
+                loc2Select.add(new Option(l.name, l.id)); 
+            });
+
+            docSelect.value = "kornreich";
+            loc1Select.value = "wauwatosa";
+            loc2Select.value = "cedarburg";
+
+            updateFormat();
+        }
+
+        function autoFillDoctor() {
+            const docId = document.getElementById('bc-doctor').value;
+            const doc = doctorsData.find(d => d.id === docId);
+            if (doc) {
+                document.getElementById('bc-name').value = doc.name;
+                document.getElementById('bc-title').value = doc.title;
+                updatePreview();
+            }
+        }
+
+        function updateFormat() {
+            const format = document.getElementById('bc-format').value;
+            const frontPreview = document.getElementById('front-preview');
+            
+            if (format === '1') {
+                document.getElementById('group-loc2').classList.add('hidden');
+                document.querySelectorAll('.prev-block-2').forEach(el => el.classList.add('hidden'));
+                frontPreview.style.backgroundImage = "url('asset/bg_1_alamat.webp')";
+                frontPreview.classList.add('format-1');
+            } else {
+                document.getElementById('group-loc2').classList.remove('hidden');
+                document.querySelectorAll('.prev-block-2').forEach(el => el.classList.remove('hidden'));
+                frontPreview.style.backgroundImage = "url('asset/bg_2_alamat.webp')";
+                frontPreview.classList.remove('format-1');
+            }
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const nameVal = document.getElementById('bc-name').value.toUpperCase();
+            const titleVal = document.getElementById('bc-title').value.toUpperCase();
+            document.querySelectorAll('.prev-name').forEach(el => el.textContent = nameVal);
+            document.querySelectorAll('.prev-title').forEach(el => el.textContent = titleVal);
+
+            const loc1 = locationsData.find(l => l.id === document.getElementById('bc-loc1').value);
+            document.querySelectorAll('.prev-address-1').forEach(el => el.textContent = loc1.address);
+            document.querySelectorAll('.prev-contact-1').forEach(el => el.textContent = `Phone: (414) ${loc1.phone.slice(4)} | Fax: (414) ${loc1.fax.slice(4)}`);
+
+            const format = document.getElementById('bc-format').value;
+            let backHtml = renderBackLocItem(loc1);
+
+            if (format === '2') {
+                const loc2 = locationsData.find(l => l.id === document.getElementById('bc-loc2').value);
+                document.querySelectorAll('.prev-address-2').forEach(el => el.textContent = loc2.address);
+                document.querySelectorAll('.prev-contact-2').forEach(el => el.textContent = `Phone: (414) ${loc2.phone.slice(4)} | Fax: (414) ${loc2.fax.slice(4)}`);
+                backHtml += renderBackLocItem(loc2);
+            }
+            
+            document.getElementById('back-loc-list-preview').innerHTML = backHtml;
+        }
+
+        function renderBackLocItem(loc) {
+            return `
+                <div class="back-loc-item">
+                    <div class="back-checkbox"></div>
+                    <div class="back-loc-text">
+                        <h4>${loc.name}</h4>
+                        <p>${loc.address}<br>Phone#: ${loc.phone} &nbsp; Fax#: ${loc.fax}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function scalePreview() {
+            const wrapper = document.getElementById('preview-wrapper');
+            const scaleWrapper = document.getElementById('preview-scale-wrapper');
+            const paddingWidth = 60;
+            const scaleX = (wrapper.clientWidth - paddingWidth) / 952.5; 
+            const scale = Math.min(scaleX, 0.85); 
+            scaleWrapper.style.transform = `scale(${scale})`;
+        }
+        window.addEventListener('resize', scalePreview);
+        window.onload = () => { initApp(); scalePreview(); };
+
+
+        // --- 3. ENGINE PEMBUAT PDF (2 HALAMAN) ---
+        async function generateVectorPDF(type) {
+            const { jsPDF } = window.jspdf;
+            
+            const isBleed = (type === 'bleed');
+            const pdfWidth = isBleed ? 114.3 : 88.9;
+            const pdfHeight = isBleed ? 76.2 : 50.8;
+            
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [pdfWidth, pdfHeight] });
+
+            const bleedMargin = 3.175; 
+            const imgX = isBleed ? 9.525 : -bleedMargin; 
+            const imgY = isBleed ? 9.525 : -bleedMargin; 
+            const imgWidth = 95.25; 
+            const imgHeight = 57.15;
+            
+            const centerX = isBleed ? 57.15 : 44.45;
+            const yOffset = isBleed ? 12.7 : 0;
+
+            const format = document.getElementById('bc-format').value;
+            const name = document.getElementById('bc-name').value.toUpperCase();
+            const title = document.getElementById('bc-title').value.toUpperCase();
+            const loc1 = locationsData.find(l => l.id === document.getElementById('bc-loc1').value);
+
+            // --- HALAMAN 1: DEPAN ---
+            try {
+                const bgUrl = format === '2' ? 'asset/bg_2_alamat.webp' : 'asset/bg_1_alamat.webp';
+                const response = await fetch(bgUrl);
+                const blob = await response.blob();
+                const reader = new FileReader();
+                await new Promise((resolve) => {
+                    reader.onloadend = () => {
+                        doc.addImage(reader.result, 'WEBP', imgX, imgY, imgWidth, imgHeight);
+                        resolve();
+                    };
+                    reader.readAsDataURL(blob);
+                });
+            } catch (error) { console.warn("BG missing"); }
+
+            if (isBleed) drawCropMarks(doc, pdfWidth, pdfHeight);
+
+            const extraY = format === '1' ? 3 : 0;
+            doc.setFont("times", "bold").setFontSize(14).setTextColor(0, 51, 51);
+            doc.text(name, centerX, 29 + yOffset + extraY, { align: 'center' }); 
+            doc.setFont("times", "normal").setFontSize(8.5);
+            doc.text(title, centerX, 34 + yOffset + extraY, { align: 'center' });
+
+            doc.setFont("helvetica", "bold").setFontSize(7).setTextColor(255, 255, 255);
+            if (format === '2') {
+                const loc2 = locationsData.find(l => l.id === document.getElementById('bc-loc2').value);
+                doc.text(loc1.address, centerX, 38.5 + yOffset, { align: 'center' });
+                doc.setFont("helvetica", "normal").text(`Phone: (414) ${loc1.phone.slice(4)} | Fax: (414) ${loc1.fax.slice(4)}`, centerX, 41.5 + yOffset, { align: 'center' });
+                doc.setFont("helvetica", "bold").text(loc2.address, centerX, 45.5 + yOffset, { align: 'center' });
+                doc.setFont("helvetica", "normal").text(`Phone: (414) ${loc2.phone.slice(4)} | Fax: (414) ${loc2.fax.slice(4)}`, centerX, 48.5 + yOffset, { align: 'center' });
+            } else {
+                doc.text(loc1.address, centerX, 43 + yOffset, { align: 'center' });
+                doc.setFont("helvetica", "normal").text(`Phone: (414) ${loc1.phone.slice(4)} | Fax: (414) ${loc1.fax.slice(4)}`, centerX, 46 + yOffset, { align: 'center' });
+            }
+
+            // --- HALAMAN 2: BELAKANG (VEKTOR MURNI) ---
+            doc.addPage([pdfWidth, pdfHeight], 'landscape');
+            if (isBleed) drawCropMarks(doc, pdfWidth, pdfHeight);
+
+            // Green Bars
+            doc.setFillColor(10, 68, 40); // var(--primary-green)
+            doc.rect(0, 0, pdfWidth, isBleed ? 13 : 3.5, 'F'); // Top bar
+            doc.rect(0, pdfHeight - (isBleed ? 18 : 5), pdfWidth, isBleed ? 18 : 5, 'F'); // Bottom bar
+
+            doc.setTextColor(10, 68, 40); // Green for headings
+            let currentY = 10 + yOffset;
+            let leftX = isBleed ? 16 : 6;
+
+            // Render Lokasi di Belakang
+            const renderBackPDFLoc = (loc) => {
+                doc.setDrawColor(0, 51, 51).setLineWidth(0.4).rect(leftX, currentY, 3.5, 3.5);
+                doc.setFont("helvetica", "bold").setFontSize(8.5).text(loc.name, leftX + 5, currentY + 2.7);
+                currentY += 4.5;
+                doc.setTextColor(51, 51, 51);
+                doc.setFont("helvetica", "normal").setFontSize(7).text(loc.address, leftX + 5, currentY);
+                currentY += 3.5;
+                doc.text(`Phone#: ${loc.phone}   Fax#: ${loc.fax}`, leftX + 5, currentY);
+                doc.setTextColor(10, 68, 40);
+                currentY += 8;
+            };
+
+            renderBackPDFLoc(loc1);
+            if (format === '2') renderBackPDFLoc(locationsData.find(l => l.id === document.getElementById('bc-loc2').value));
+
+            // Appointment Details
+            currentY += 2;
+            doc.setFont("helvetica", "bold").setFontSize(10).text("Appointment Details:", leftX, currentY);
+            doc.setDrawColor(248, 192, 24).setLineWidth(1.2).line(leftX, currentY + 1.5, leftX + 35, currentY + 1.5);
+            
+            currentY += 10;
+            doc.setTextColor(51, 51, 51);
+            
+            // Provider Field
+            doc.setFontSize(8.5).text("Provider:", leftX, currentY);
+            doc.setDrawColor(51, 51, 51).setLineWidth(0.3).line(leftX + 15, currentY + 0.5, pdfWidth - (isBleed ? 16 : 6), currentY + 0.5);
+            
+            currentY += 10;
+            // Date Field
+            doc.text("Date:", leftX, currentY);
+            doc.line(leftX + 10, currentY + 0.5, leftX + 50, currentY + 0.5);
+            
+            // Time Field (Same line)
+            doc.text("Time:", leftX + 55, currentY);
+            doc.line(leftX + 65, currentY + 0.5, pdfWidth - (isBleed ? 16 : 6), currentY + 0.5);
+
+            doc.save(`BusinessCard_${isBleed?'Master':'Trim'}_${name.replace(/\s+/g,'_')}.pdf`);
+        }
+
+        function drawCropMarks(doc, pdfWidth, pdfHeight) {
+            doc.setDrawColor(255, 0, 0).setLineWidth(0.2);
+            const tX1 = 12.7, tY1 = 12.7, tX2 = 101.6, tY2 = 63.5, bX1 = 9.525, bY1 = 9.525, bX2 = 104.775, bY2 = 66.675;
+            doc.line(tX1, 0, tX1, bY1); doc.line(0, tY1, bX1, tY1); 
+            doc.line(tX2, 0, tX2, bY1); doc.line(114.3, tY1, bX2, tY1); 
+            doc.line(tX1, 76.2, tX1, bY2); doc.line(0, tY2, bX1, tY2); 
+            doc.line(tX2, 76.2, tX2, bY2); doc.line(114.3, tY2, bX2, tY2);
+        }
+        
+        initApp();
+    </script>
+</body>
+</html>
