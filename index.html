@@ -99,26 +99,43 @@
         .card-preview.format-1 .c-title { top: 325px; }
         
         .c-addresses-container {
-            position: absolute; bottom: 15px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block;
         }
-        .c-loc-block { display: flex; flex-direction: column; align-items: center; gap: 2px;}
-        .c-loc-address { font-family: Arial, Helvetica, sans-serif; font-size: 21px; font-weight: 700; color: #ffffff; margin: 0; }
-        .c-loc-contact { font-family: Arial, Helvetica, sans-serif; font-size: 19px; font-weight: 400; color: #ffffff; margin: 0; }
+        .c-loc-block { 
+            position: absolute; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 3px; 
+            transition: top 0.3s;
+        }
+        
+        /* Posisi Absolut Alamat untuk Format 2 */
+        .c-loc-block.prev-block-1 { top: 348px; } /* Dinaikkan 4px */
+        .c-loc-block.prev-block-2 { top: 418px; } /* Diturunkan 4px */
+
+        /* Posisi Absolut Alamat untuk Format 1 (Dinaikkan agar presisi di tengah) */
+        .card-preview.format-1 .c-loc-block.prev-block-1 { top: 412px; }
+
+        .c-loc-address { font-family: Arial, Helvetica, sans-serif; font-size: 20px; font-weight: 700; color: #ffffff; margin: 0; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); }
+        .c-loc-contact { font-family: Arial, Helvetica, sans-serif; font-size: 18px; font-weight: 400; color: #ffffff; margin: 0; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); }
+
+        /* Penyesuaian ukuran font saat memakai Format 1 agar proporsional */
+        .card-preview.format-1 .c-loc-address { font-size: 22px; }
+        .card-preview.format-1 .c-loc-contact { font-size: 19px; }
 
         /* SISI BELAKANG (BACK) */
         .back-accent-bar-top { position: absolute; top: 0; left: 0; right: 0; height: 45px; background: var(--primary-green); z-index: 10; }
         .back-accent-bar-bottom { position: absolute; bottom: 0; left: 0; right: 0; height: 45px; background: var(--primary-green); z-index: 10; }
         
-        .back-container { padding: 65px 60px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
-        .back-loc-list { display: flex; flex-direction: column; gap: 28px; margin-bottom: 25px; }
+        .back-container { padding: 60px 60px 50px 60px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
+        .back-loc-list { display: flex; flex-direction: column; gap: 20px; }
+        .card-preview.format-1 .back-loc-list { margin-top: 15px; } /* Menurunkan lokasi 15px khusus Format 1 */
         .back-loc-item { display: flex; align-items: flex-start; gap: 15px; }
         .back-checkbox { width: 26px; height: 26px; border: 3.5px solid var(--dark-green); flex-shrink: 0; margin-top: 3px; }
-        .back-loc-text h4 { margin: 0; font-size: 22px; font-weight: 700; color: var(--primary-green); }
-        .back-loc-text p { margin: 5px 0 0 0; font-size: 17.5px; font-weight: 400; color: #333; line-height: 1.4; }
+        .back-loc-text h4 { margin: 0; font-size: 24px; font-weight: 700; color: var(--primary-green); }
+        .back-loc-text p { margin: 5px 0 0 0; font-size: 19px; font-weight: 400; color: #333; line-height: 1.4; }
         .back-loc-text span.phone-fax { font-weight: 600; }
         
-        .back-details-title { font-size: 25px; font-weight: 700; color: var(--primary-green); border-bottom: 5px solid var(--yellow); align-self: flex-start; padding-bottom: 6px; margin-bottom: 25px; margin-top: 15px; }
-        .back-field { display: flex; align-items: flex-end; gap: 15px; margin-bottom: 20px; font-size: 22px; font-weight: 700; color: #333; }
+        .back-appointment-box { margin-top: auto; display: flex; flex-direction: column; margin-bottom: 5px; }
+        .back-details-title { font-size: 25px; font-weight: 700; color: var(--primary-green); border-bottom: 5px solid var(--yellow); align-self: flex-start; padding-bottom: 6px; margin-bottom: 30px; margin-top: 0; }
+        .back-field { display: flex; align-items: flex-end; gap: 15px; margin-bottom: 35px; font-size: 22px; font-weight: 700; color: #333; }
         .back-line { flex-grow: 1; border-bottom: 2px solid #333; height: 20px; }
         
         /* Flexbox for Date/Time row */
@@ -211,17 +228,19 @@
             <!-- PRATINJAU SISI BELAKANG -->
             <div>
                 <div class="preview-label-box"><span>Sisi Belakang (Appointment)</span></div>
-                <div class="card-preview trim-view">
+                <div class="card-preview trim-view" id="back-preview">
                     <div class="back-accent-bar-top"></div>
                     <div class="safe-area back-container">
                         <div class="back-loc-list" id="back-loc-list-preview">
                             <!-- JS will inject location checkboxes here -->
                         </div>
-                        <div class="back-details-title">Appointment Details:</div>
-                        <div class="back-field">Provider:<div class="back-line"></div></div>
-                        <div class="back-row">
-                            <div class="back-field" style="flex: 1.2;">Date:<div class="back-line"></div></div>
-                            <div class="back-field" style="flex: 1;">Time:<div class="back-line"></div></div>
+                        <div class="back-appointment-box">
+                            <div class="back-details-title">Appointment Details:</div>
+                            <div class="back-field">Provider:<div class="back-line"></div></div>
+                            <div class="back-row">
+                                <div class="back-field" style="flex: 1.2;">Date:<div class="back-line"></div></div>
+                                <div class="back-field" style="flex: 1;">Time:<div class="back-line"></div></div>
+                            </div>
                         </div>
                     </div>
                     <div class="back-accent-bar-bottom"></div>
@@ -300,17 +319,20 @@
         function updateFormat() {
             const format = document.getElementById('bc-format').value;
             const frontPreview = document.getElementById('front-preview');
+            const backPreview = document.getElementById('back-preview');
             
             if (format === '1') {
                 document.getElementById('group-loc2').classList.add('hidden');
                 document.querySelectorAll('.prev-block-2').forEach(el => el.classList.add('hidden'));
                 frontPreview.style.backgroundImage = "url('asset/bg_1_alamat.webp')";
                 frontPreview.classList.add('format-1');
+                backPreview.classList.add('format-1');
             } else {
                 document.getElementById('group-loc2').classList.remove('hidden');
                 document.querySelectorAll('.prev-block-2').forEach(el => el.classList.remove('hidden'));
                 frontPreview.style.backgroundImage = "url('asset/bg_2_alamat.webp')";
                 frontPreview.classList.remove('format-1');
+                backPreview.classList.remove('format-1');
             }
             updatePreview();
         }
@@ -413,25 +435,28 @@
             doc.setFont("times", "normal").setFontSize(8.5);
             doc.text(title, centerX, yOffset + 32.5 + extraY, { align: 'center' });
 
-            // Alamat (Format tanda kurung di depan)
+            // Alamat (Koordinat Dinaikkan agar tidak keluar garis batas warna hijau)
             doc.setTextColor(255, 255, 255);
             if (format === '2') {
                 const loc2 = locationsData.find(l => l.id === document.getElementById('bc-loc2').value);
                 
+                // Lokasi 1 (Dinaikkan 4px atau ~0.4mm ke atas)
                 doc.setFont("helvetica", "bold").setFontSize(7);
-                doc.text(loc1.address, centerX, yOffset + 40, { align: 'center' });
+                doc.text(loc1.address, centerX, yOffset + 36.1, { align: 'center' });
                 doc.setFont("helvetica", "normal").setFontSize(6.5);
-                doc.text(`Phone: ${formatPhoneFront(loc1.phone)} | Fax: ${formatPhoneFront(loc1.fax)}`, centerX, yOffset + 42.5, { align: 'center' });
+                doc.text(`Phone: ${formatPhoneFront(loc1.phone)} | Fax: ${formatPhoneFront(loc1.fax)}`, centerX, yOffset + 38.6, { align: 'center' });
                 
+                // Lokasi 2 (Diturunkan 4px atau ~0.4mm ke bawah)
                 doc.setFont("helvetica", "bold").setFontSize(7);
-                doc.text(loc2.address, centerX, yOffset + 46.5, { align: 'center' });
+                doc.text(loc2.address, centerX, yOffset + 42.9, { align: 'center' });
                 doc.setFont("helvetica", "normal").setFontSize(6.5);
-                doc.text(`Phone: ${formatPhoneFront(loc2.phone)} | Fax: ${formatPhoneFront(loc2.fax)}`, centerX, yOffset + 49, { align: 'center' });
+                doc.text(`Phone: ${formatPhoneFront(loc2.phone)} | Fax: ${formatPhoneFront(loc2.fax)}`, centerX, yOffset + 45.4, { align: 'center' });
             } else {
+                // Lokasi 1 untuk Format 1 (Dinaikkan presisi di tengah panel bawah)
                 doc.setFont("helvetica", "bold").setFontSize(7);
-                doc.text(loc1.address, centerX, yOffset + 44, { align: 'center' });
+                doc.text(loc1.address, centerX, yOffset + 42.5, { align: 'center' });
                 doc.setFont("helvetica", "normal").setFontSize(6.5);
-                doc.text(`Phone: ${formatPhoneFront(loc1.phone)} | Fax: ${formatPhoneFront(loc1.fax)}`, centerX, yOffset + 47, { align: 'center' });
+                doc.text(`Phone: ${formatPhoneFront(loc1.phone)} | Fax: ${formatPhoneFront(loc1.fax)}`, centerX, yOffset + 45.5, { align: 'center' });
             }
 
             // ================== HALAMAN 2: BELAKANG ==================
@@ -441,60 +466,60 @@
             doc.setFillColor(10, 68, 40); // var(--primary-green)
             // Top Bar: dari ujung atas hingga menyentuh 5mm di dalam trim
             doc.rect(0, 0, pdfWidth, yOffset + 5, 'F'); 
-            // Bottom Bar: dari titik 45mm trim hingga ujung bawah kertas
-            doc.rect(0, yOffset + 45.5, pdfWidth, pdfHeight - (yOffset + 45.5), 'F');
+            // Bottom Bar: dari titik 46mm trim hingga ujung bawah kertas (Disesuaikan agar ada ruang)
+            doc.rect(0, yOffset + 46, pdfWidth, pdfHeight - (yOffset + 46), 'F');
 
             const leftX = 6; // Margin kiri dalam area Trim
-            let currentY = 9.5; // Titik mulai render list dalam area Trim
+            let currentY = format === '1' ? 8.0 : 6.5; // Titik mulai render list (Format 1 diturunkan ekstra 1.5mm setara 15px)
 
             const renderBackPDFLoc = (loc) => {
                 // Checkbox Hollow (Square Hijau)
                 doc.setDrawColor(0, 51, 51).setLineWidth(0.4).rect(xOffset + leftX, yOffset + currentY, 3, 3);
                 
-                // Location Title (Bold Green)
-                doc.setFont("helvetica", "bold").setFontSize(8.5).setTextColor(10, 68, 40);
+                // Location Title (Bold Green) - Font Diperbesar
+                doc.setFont("helvetica", "bold").setFontSize(9).setTextColor(10, 68, 40);
                 doc.text(loc.name, xOffset + leftX + 5, yOffset + currentY + 2.5);
                 
-                // Address (Normal Black)
-                doc.setFont("helvetica", "normal").setFontSize(7).setTextColor(51, 51, 51);
-                doc.text(loc.address, xOffset + leftX + 5, yOffset + currentY + 6);
+                // Address (Normal Black) - Font Diperbesar
+                doc.setFont("helvetica", "normal").setFontSize(7.5).setTextColor(51, 51, 51);
+                doc.text(loc.address, xOffset + leftX + 5, yOffset + currentY + 6.5);
                 
-                // Phone/Fax (Setrip format, Bold Angka)
-                doc.text("Phone#: ", xOffset + leftX + 5, yOffset + currentY + 9.5);
+                // Phone/Fax (Setrip format, Bold Angka) - Font Diperbesar
+                doc.text("Phone#: ", xOffset + leftX + 5, yOffset + currentY + 10.5);
                 doc.setFont("helvetica", "bold");
-                doc.text(loc.phone, xOffset + leftX + 16, yOffset + currentY + 9.5);
+                doc.text(loc.phone, xOffset + leftX + 17, yOffset + currentY + 10.5);
                 
                 doc.setFont("helvetica", "normal");
-                doc.text("   Fax#: ", xOffset + leftX + 33, yOffset + currentY + 9.5);
+                doc.text("   Fax#: ", xOffset + leftX + 35, yOffset + currentY + 10.5);
                 doc.setFont("helvetica", "bold");
-                doc.text(loc.fax, xOffset + leftX + 44, yOffset + currentY + 9.5);
+                doc.text(loc.fax, xOffset + leftX + 46, yOffset + currentY + 10.5);
                 
-                currentY += 13.5;
+                currentY += 12.0; // Spasi antar lokasi
             };
 
             renderBackPDFLoc(loc1);
             if (format === '2') renderBackPDFLoc(locationsData.find(l => l.id === document.getElementById('bc-loc2').value));
 
             // --- Appointment Details ---
-            currentY = 32;
+            let apptY = 30.0; // Posisi Tetap (Dinaikkan 5px / 0.5mm agar menjauh dari blok bawah)
             doc.setFont("helvetica", "bold").setFontSize(10).setTextColor(10, 68, 40);
-            doc.text("Appointment Details:", xOffset + leftX, yOffset + currentY);
+            doc.text("Appointment Details:", xOffset + leftX, yOffset + apptY);
             // Yellow line strict width under text
-            doc.setDrawColor(248, 192, 24).setLineWidth(1.2).line(xOffset + leftX, yOffset + currentY + 1.5, xOffset + leftX + 35, yOffset + currentY + 1.5);
+            doc.setDrawColor(248, 192, 24).setLineWidth(1.2).line(xOffset + leftX, yOffset + apptY + 1.5, xOffset + leftX + 37, yOffset + apptY + 1.5);
             
-            // Fields (Black, Bold)
-            currentY += 6.5; // Y = 38.5
+            // Fields (Black, Bold) - Jarak Diperbesar untuk Tulisan Tangan
+            apptY += 7.5; // Y = 38.0
             doc.setTextColor(51, 51, 51).setFontSize(8.5);
-            doc.text("Provider:", xOffset + leftX, yOffset + currentY);
+            doc.text("Provider:", xOffset + leftX, yOffset + apptY);
             doc.setDrawColor(51, 51, 51).setLineWidth(0.3);
-            doc.line(xOffset + leftX + 15, yOffset + currentY + 0.5, pdfWidth - xOffset - leftX, yOffset + currentY + 0.5);
+            doc.line(xOffset + leftX + 15, yOffset + apptY + 0.5, pdfWidth - xOffset - leftX, yOffset + apptY + 0.5);
             
-            currentY += 5.5; // Y = 44.0
-            doc.text("Date:", xOffset + leftX, yOffset + currentY);
-            doc.line(xOffset + leftX + 9, yOffset + currentY + 0.5, xOffset + leftX + 42, yOffset + currentY + 0.5);
+            apptY += 6.5; // Y = 44.5
+            doc.text("Date:", xOffset + leftX, yOffset + apptY);
+            doc.line(xOffset + leftX + 9, yOffset + apptY + 0.5, xOffset + leftX + 42, yOffset + apptY + 0.5);
             
-            doc.text("Time:", xOffset + leftX + 46, yOffset + currentY);
-            doc.line(xOffset + leftX + 55, yOffset + currentY + 0.5, pdfWidth - xOffset - leftX, yOffset + currentY + 0.5);
+            doc.text("Time:", xOffset + leftX + 46, yOffset + apptY);
+            doc.line(xOffset + leftX + 55, yOffset + apptY + 0.5, pdfWidth - xOffset - leftX, yOffset + apptY + 0.5);
 
             // Gambarkan Cropmarks di Lapisan Terakhir
             if (isBleed) drawCropMarks(doc, pdfWidth, pdfHeight);
